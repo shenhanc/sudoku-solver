@@ -5,8 +5,9 @@ using namespace std;
 
 class SubRec {
 public:
-  SubRec(const int *d, int recid) : d_(d), p_(recid / 3 * 27 + (recid % 3) * 3) {
-  }
+  // recid ranges from [0, 9).
+  SubRec(const int *d, int recid) :
+      d_(d), p_(recid / 3 * 27 + (recid % 3) * 3) {}
 
   int operator[](int i) const {
     return d_[p_ + (i / 3) * 9 + (i % 3)];
@@ -20,6 +21,8 @@ public:
 
 private:
   const int *d_;
+  // p_ ranges from [0, 81). It is the number that points
+  // to the top-left point.
   const int p_;
 
 };
@@ -89,15 +92,6 @@ public:
 
   bool solve(int step);
 
-  void print() {
-    for (int i = 0; i < 81; ++i) {
-      if (i && i % 9 == 0)
-	cout << endl;
-      cout << d_[i] << " ";
-    }
-    cout << endl;
-  }
-
   void pretty_print();
 
 private:
@@ -109,8 +103,8 @@ bool MainRec::solve(int step) {
   int to_solve = 0;
   for (int i = 0; i < 81; ++i)
     if (!d_[i]) ++to_solve;
-  cout << "Solve rectange. Step " << step << ", " << to_solve << " unsolved" << endl;
-  print();
+  cout << "Step " << step << ", " << to_solve << " unsolved" << endl;
+  pretty_print();
   while(to_solve) {
     vector<vector<int>> candidates(81);
     bool found_one = false;
@@ -130,10 +124,10 @@ bool MainRec::solve(int step) {
 	  return false;
 	}
 	if (can.size() == 1) {
-	  cout << "[" << to_row(p) << ", " << to_col(p) << "]: " << can.front() << endl;
+	  cout << "Done [" << to_row(p) << "," << to_col(p) << "] = " << can.front() << ", " << --to_solve << " unsolved" << endl;
 	  d_[p] = can.front();
-	  to_solve--;
 	  found_one = true;
+          pretty_print();
 	  break;
 	}
       }
@@ -155,8 +149,11 @@ bool MainRec::solve(int step) {
 	for (int c : candidates[min_can_p]) {
 	  d_[min_can_p] = c;
 	  MainRec m(d_);
-	  cout << "try [" << to_row(min_can_p) << ", "
-               << to_col(min_can_p) << "]=" << c << endl;
+	  cout << "Try [" << to_row(min_can_p) << ","
+               << to_col(min_can_p) << "]=" << c << " from all possible values {";
+          for (int cc : candidates[min_can_p])
+            cout << " " << cc;
+          cout << " }" << endl;
 	  if (!m.solve(step + 1)) {
 	    d_[min_can_p] = 0;
 	  } else {
@@ -183,7 +180,10 @@ void MainRec::pretty_print() {
     for (int c = 0; c < 9; ++c) {
       if (c % 3 == 0)
         cout << " |";
-      cout << " " << row[c];
+      if (row[c])
+        cout << " " << row[c];
+      else
+        cout << " _";
     }
     cout << " |" <<endl;
   }
@@ -203,20 +203,5 @@ int main() {
     0, 1, 0, 0, 0, 0, 0, 0, 2};
   MainRec m(d);
   m.solve(1);
-
-  // for (int r = 0; r < 9; ++r) {
-  //   SubRec sr(m.d(), r);
-  //   for (int k = 0; k < 9; ++k) {
-  //     cout << sr[k] << " ";
-  //   }
-  //   cout << endl;
-  // }
-
-  // for (int r = 0; r < 9; ++r) {
-  //   Row row(m, r);
-  //   for (int i = 0; i < 9; ++i) {
-  //     cout << row[i] << " ";
-  //   }
-  //   cout << endl;
-  // }
+  return 0;
 }
